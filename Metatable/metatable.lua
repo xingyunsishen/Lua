@@ -64,21 +64,62 @@
 -- "__mode"      用于弱表(week table)
 -- "metatable"   用于保护metatable不被访问
 
---index元方法
---如下例子中实现了在表中查找键不存在时转而在元表中查找该键的功能
-mytable = setmetatable({key1 = "value1"}, --原始表
-	{__index = function(self, key)     --重载函数
-    if key == "key2" then
-		return "metatablevalue"
-	end
-end
-}) 
+----index元方法
+----如下例子中实现了在表中查找键不存在时转而在元表中查找该键的功能
+--mytable = setmetatable({key1 = "value1"}, --原始表
+--	{__index = function(self, key)     --重载函数
+--    if key == "key2" then
+--		return "metatablevalue"
+--	end
+--end
+--}) 
+--
+--print(mytable.key1, mytable.key2)
+----output
+----value1	metatablevalue
+----关于__index元方法，有很多比较高阶的技巧，例如:__index的元方法不需要非是一个
+----函数，他也可以是一个表。
+--t = setmetatable({[1] = "hello"}, {__index ={ [2] = "world"}})
+--print(t[1], t[2])
+----第一句代码有点绕，解释：先是把{__index = {}}作为元表，但__index接受一个表，而
+----不是函数，这个表中包含[2] = "world"这个键值对。所以当t[2]去在自身的表中找不到
+----时，在__index的表中去寻找，然后找到了[2] = "world"这个键值对。
+----__index元方法还可以实现给表中每一个值赋上默认值；和__newindex元方法联合监控对
+----表的读取、修改等比较高阶的功能，后续再研究琢磨。。。
+----++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+----__tostring元方法
+----与Java中的tostring()函数类似，可以实现自定义的字符串转换
+--arr = {1, 2, 3, 4}
+--arr = setmetatable(arr, {__tostring = function (self)
+--	local result = '{'
+--	local sep = ''
+--	for _, i in pairs(self) do
+--		result = result ..sep.. i
+--		sep = ','
+--	end
+--	result = result.. '}'
+--	return result
+--end})
+--
+--print(arr)
+----__call元方法
+----__call元方法的功能类似于C++中的仿函数，使得普通的表也可以被调用
+--functor = {} 
+--function func1(self, arg)
+--	print ("called from", arg)
+--end
+--
+--setmetatable(functor, {__call = func1})
+--
+--functor("functor")     --called from functor
+--print(functor)
+--+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--__metatable元方法
+--假如我们想保护我们的对象使其使用者既看不到也不能修改metatables。我们可以对
+--metatable设置__metatable的值，getmetatable将返回这个域的值，而调用setmetatable
+--将会报错
+Object = setnetatable({}, {__metatable = "You cannot access here"})
 
-print(mytable.key1, mytable.key2)
---output
---value1	metatablevalue
---关于__index元方法，有很多比较高阶的技巧，例如:__index的元方法不需要非是一个
---函数，他也可以是一个表。
-t = setmetatable({[1] = "hello"}, {__index ={ [2] = "world"}})
-print(t[1], t[2])
+print(getmetatable(Object)) 
+setmetatable(Object,{})
 
